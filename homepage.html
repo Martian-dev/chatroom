@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Homepage</title>
+    <style>
+      .html {
+        font-size: 100%;
+      }
+      .body {
+        margin: 0;
+      }
+      .room-control {
+        margin-top: 40vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+      }
+      #invalid-room-id {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="room-control">
+      <form action="/create-room" method="GET">
+        <button type="submit" id="create-room">create new room</button>
+      </form>
+      <form id="join-room">
+        <input
+          name="room"
+          id="join-room-id"
+          placeholder="Enter room id"
+          required
+        />
+        <label id="invalid-room-id"></label>
+        <button type="submit" id="join-room-button">Join room</button>
+      </form>
+    </div>
+    <form id="username">
+      <input id="username-field" name="username" placeholder="enter username" />
+      <button type="submit">save</button>
+    </form>
+
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <!-- <script>
+      const socket = io();
+
+      const createRoomButton = document.getElementById("create-room");
+      const joinRoomButton = document.getElementById("join-room");
+      const joinRoomID = document.getElementById("join-room-id");
+      const invalidRoomID = document.getElementById("invalid-room-id");
+
+      createRoomButton.addEventListener("click", () => {
+        let roomID = new Date().getTime();
+        console.log(roomID);
+        socket.emit("new-room-id", roomID);
+      });
+
+      joinRoomButton.addEventListener("click", () => {
+        if (!(joinRoomID.value == "")) {
+          let roomID = joinRoomID.value;
+          console.log(roomID);
+          joinRoomID.value = "";
+        } else {
+          joinRoomID.value = "";
+          invalidRoomID.style.display = "block";
+          invalidRoomID.innerText = "enter a valid room id";
+        }
+      });
+    </script> -->
+    <script src="script.js"></script>
+  </body>
+</html>
