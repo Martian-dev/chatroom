@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { Server } from 'socket.io';
 import crypto from "crypto";
-// import session from "express-session";
-import cookieSession from "cookie-session";
+import session from "express-session";
+import cookieParser from 'cookie-parser';
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -18,24 +18,36 @@ const io = new Server(server, {
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+function getUserRooms(socket) {
+  return Object.entries(rooms).reduce((IDs, [roomID, userDat]) => {
+    if (userDat.users[socket.id] != null) IDs.push(roomID)
+    return IDs;
+  }, [])
+}
+
 app.use(express.static('public'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json({
   type: ['application/json', 'text/plain']
 }));
-app.use(cookieSession({
-  name: "session",
+app.use(session({
+  resave: true,
+  saveUninitialized: true,
   secret: process.env.SESSION_SECRET,
 }));
+app.use(cookieParser());
 
 const rooms = {};
 
 app.get('/',
   (req, res, next) => {
-  if (!req.session.user) {
-    req.session.user = `Player${Math.floor(1000 + Math.random() * 8999)}`;
-    return next();
-  }
+    if (!req.session.user) {
+      if (!req.cookies.user) {
+        req.session.user = `Player${Math.floor(1000 + Math.random() * 8999)}`;
+        return next();
+      }
+      req.session.user = req.cookies.user;
+    }
   return next();
   },
   (req, res) => {
@@ -51,10 +63,9 @@ app.post('/usernameUpdate', (req, res) => {
 });
 
 app.get('/create-room', (req, res) => {
-  const roomID = crypto.randomBytes(4).toString('hex');
-   if (rooms[roomID] != null) {
-    console.log(rooms);
-    return;
+  let roomID = crypto.randomBytes(4).toString('hex');
+  if (rooms[roomID] != null) {
+    roomID = crypto.randomBytes(4).toString('hex');
   }
   rooms[roomID] = { users: {} };
   res.redirect(roomID);
@@ -64,22 +75,28 @@ app.get('/:room', (req, res) => {
   if (rooms[req.params.room] == null) {
     return res.redirect('/');
   }
-  res.sendFile(join(__dirname, 'index.html'));
+
+  res.sendFile(join(__dirname, 'chatroom.html'));
   
 });
 
-const users = {};
+io.on("connection", (socket) => {
+  socket.on('new-user', (roomID, name) => {
+    socket.join(roomID);
+    rooms[roomID].users[socket.id] = name;
+    socket.broadcast.to(roomID).emit('user-connected', name);
+  });
+  socket.on("send-chat-message", (roomID, msg) => {
+    socket.broadcast.to(roomID).emit("chat-message", { message: msg, username: rooms[roomID].users[socket.id] });
 
-// io.on("connection", (socket) => {
-//   // socket.on("chat message", (msg) => {
-//   //   io.emit("chat message", msg);
-
-//   // });
-//   socket.on("new-room-id", (roomID) => {
-//     socket.join(roomID);
-//     io.to(roomID).emit("DONE", "hoi from room");
-//   });
-// });
+  });
+  socket.on("disconnect", () => {
+    getUserRooms(socket).forEach(roomID => {
+      socket.broadcast.to(roomID).emit("user-disconnected", rooms[roomID].users[socket.id]);
+      delete rooms[roomID].users[socket.id];
+    });
+  });
+});
 
 server.listen('3000', () => {
   console.log("server running at http://localhost:3000");
