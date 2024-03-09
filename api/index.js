@@ -1,7 +1,7 @@
 import express from 'express';
 import { createServer } from 'node:http';
 import { fileURLToPath } from 'node:url';
-import { dirname, join } from 'node:path';
+import { dirname, join, normalize } from 'node:path';
 import { Server } from 'socket.io';
 import crypto from "crypto";
 import session from "express-session";
@@ -16,7 +16,7 @@ const io = new Server(server, {
   connectionStateRecovery: {}
 });
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const __dirname = dirname(fileURLToPath(import.meta.url)) + "/..";
 
 function getUserRooms(socket) {
   return Object.entries(rooms).reduce((IDs, [roomID, userDat]) => {
@@ -52,7 +52,7 @@ app.get('/',
   },
   (req, res) => {
     res.cookie("user", req.session.user);
-    res.sendFile(join(__dirname, 'homepage.html'));
+    res.sendFile(join(normalize(__dirname), 'homepage.html'));
 });
 
 app.post('/usernameUpdate', (req, res) => {
@@ -76,7 +76,7 @@ app.get('/:room', (req, res) => {
     return res.redirect('/');
   }
 
-  res.sendFile(join(__dirname, 'chatroom.html'));
+  res.sendFile(join(normalize(__dirname), 'chatroom.html'));
   
 });
 
