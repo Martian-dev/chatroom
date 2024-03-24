@@ -6,10 +6,6 @@ its a basic chatroom where the user can join a chatroom and talk and then leave.
 
 ## TODO
 
-### SUPER IMPORTANT
-
-FIGURE OUT WHATS WRONG WITH THE APP IN THE PRODUCTION. CURRENTLY CREATING NEW ROOMS, USERNAMES, AND JOINING NEW ROOMS DOESNT WORK AT ALL.
-
 - UI/UX enhancements:
   - better styling overall.
   - copying the roomId button.
